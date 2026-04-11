@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: migrate
+  namespace: myapp
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  template:
+    spec:
+      containers:
+        - name: migrate
+          image: your-registry/myapp:latest
+          imagePullPolicy: Always
+          command: ["python", "manage.py", "migrate"]
+          envFrom:
+            - secretRef:
+                name: myapp-env
+      restartPolicy: Never
