@@ -9,21 +9,19 @@ Template minimal pour un projet Django déployé sur Kubernetes.
 - [Docker](https://docs.docker.com/get-docker/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) connecté à un cluster local ([minikube](https://minikube.sigs.k8s.io/docs/start/), [k3d](https://k3d.io/), [kind](https://kind.sigs.k8s.io/)…)
 - [Skaffold](https://skaffold.dev/docs/install/)
+- Un ingress controller nginx installé dans le cluster ([guide d'installation](https://kubernetes.github.io/ingress-nginx/deploy/))
 
 ---
 
-## 1. Cloner et renommer
+## 1. Cloner et initialiser
 
 ```bash
 git clone <url> mon-projet
 cd mon-projet
+make init NAME=mon-projet
 ```
 
-Remplacer le placeholder `myapp` par le nom du projet dans tous les fichiers :
-
-```bash
-grep -rl 'myapp' . | xargs sed -i 's/myapp/mon-projet/g'
-```
+`make init` remplace le placeholder `myapp` dans tous les fichiers, vérifie la présence du nginx ingress controller, et indique quoi ajouter dans `/etc/hosts`.
 
 ---
 
@@ -37,7 +35,7 @@ Renseigner les identifiants de la base de données et la `SECRET_KEY`.
 
 ### `k8s/ingress.yaml`
 
-Remplacer `myapp.local` par le nom de domaine souhaité.
+L'URL par défaut est `myapp.local`. Pour la changer, modifier le champ `host` dans ce fichier, puis mettre à jour `/etc/hosts` en conséquence.
 
 ### `k8s/web/deployment.dev.yaml`
 
@@ -74,7 +72,7 @@ Skaffold construit l'image, applique les manifests et surveille les changements.
 
 ## 5. Accéder à l'application
 
-Ajouter l'entrée dans `/etc/hosts` :
+Ajouter l'entrée dans `/etc/hosts` (`make init` te l'indique automatiquement) :
 
 ```bash
 echo "127.0.0.1 myapp.local" | sudo tee -a /etc/hosts
