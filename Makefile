@@ -2,7 +2,7 @@ IMAGE ?= your-registry/myapp
 NAMESPACE ?= myapp
 
 init:
-	@test -n "$(NAME)" || (echo "Usage: make init NAME=mon-projet"; exit 1)
+	@[ "$(origin NAME)" = "command line" ] || (echo "Usage: make init NAME=mon-projet"; exit 1)
 	@kubectl get ingressclass nginx >/dev/null 2>&1 || \
 		echo "ATTENTION : aucun ingress controller nginx detecte dans le cluster. L'application ne sera pas accessible par hostname sans lui."
 	grep -rl 'myapp' . --exclude-dir='.git' | xargs sed -i 's/myapp/$(NAME)/g'
