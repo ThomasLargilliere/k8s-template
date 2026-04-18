@@ -27,7 +27,12 @@ up:
 	kubectl apply -k k8s/overlays/prod
 
 build:
-	docker build -t $(IMAGE):$(shell git rev-parse --short HEAD) ./app
+	docker build -t $(IMAGE):$(shell git rev-parse --short HEAD) ./django
 	docker push $(IMAGE):$(shell git rev-parse --short HEAD)
 	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/deployment.yaml
 	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/migrate-job.yaml
+
+shell:
+	kubectl exec -it -n $(NAMESPACE) \
+		$(shell kubectl get pod -n $(NAMESPACE) -l app=django -o jsonpath='{.items[0].metadata.name}') \
+		-- /bin/bash

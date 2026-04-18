@@ -1,12 +1,4 @@
-__pycache__/
 .idea/
-*.py[cod]
-*.egg-info/
-venv/
-.venv/
-db.sqlite3
-media/
-staticfiles/
 k8s/secret.yaml
 k8s/ingress.yaml
 k8s/web/deployment.dev.yaml

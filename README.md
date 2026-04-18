@@ -16,6 +16,7 @@ Template minimal pour un projet Django déployé sur Kubernetes.
 ## Structure
 
 ```
+django/               # code source Django (Dockerfile, manage.py, config/)
 k8s/
   base/               # manifests communs (namespace, db, django, ingress, secret)
   overlays/
@@ -113,6 +114,7 @@ make up      # déploiement prod statique (kubectl apply -k overlays/prod)
 make down    # scale tous les deployments à 0
 make reset   # supprime le namespace entier
 make build   # build + push + mise à jour du tag dans les manifests
+make shell   # ouvre un shell dans le pod django en cours d'exécution
 ```
 
 ## En production
