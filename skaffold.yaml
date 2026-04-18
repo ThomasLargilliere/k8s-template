@@ -11,13 +11,8 @@ build:
   local:
     push: false
 manifests:
-  rawYaml:
-    - k8s/namespace.yaml
-    - k8s/secret.yaml
-    - k8s/db/deployment.yaml
-    - k8s/db/service.yaml
-    - k8s/web/deployment.dev.yaml
-    - k8s/web/service.yaml
-    - k8s/ingress.yaml
+  kustomize:
+    paths:
+      - k8s/overlays/dev
 deploy:
   kubectl: {}

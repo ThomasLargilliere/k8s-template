@@ -12,7 +12,7 @@ init:
 	@echo "Ajoute cette ligne dans /etc/hosts :"
 	@echo "  127.0.0.1 $(NAME).local"
 	@echo ""
-	@echo "Pour changer l'URL, edite : k8s/ingress.yaml"
+	@echo "Pour changer l'URL, edite : k8s/base/ingress.yaml"
 
 dev:
 	skaffold dev --cleanup=false
@@ -24,13 +24,10 @@ reset:
 	kubectl delete namespace $(NAMESPACE)
 
 up:
-	kubectl apply -f k8s/namespace.yaml
-	kubectl apply -f k8s/secret.yaml
-	kubectl apply -f k8s/db/deployment.yaml
-	kubectl apply -f k8s/web/deployment.yaml
+	kubectl apply -k k8s/overlays/prod
 
 build:
 	docker build -t $(IMAGE):$(shell git rev-parse --short HEAD) ./app
 	docker push $(IMAGE):$(shell git rev-parse --short HEAD)
-	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/web/deployment.yaml
-	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/web/migrate-job.yaml
+	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/deployment.yaml
+	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/migrate-job.yaml

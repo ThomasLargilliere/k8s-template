@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web
+  name: django
   namespace: myapp
 spec:
   replicas: 2
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: web
+      app: django
   template:
     metadata:
       labels:
-        app: web
+        app: django
     spec:
       initContainers:
         - name: wait-for-db
@@ -21,13 +21,13 @@ spec:
             - sh
             - -c
             - |
-              until nc -z db 3306; do
-                echo "Waiting for MariaDB..."
+              until nc -z db 5432; do
+                echo "Waiting for PostgreSQL..."
                 sleep 2
               done
-              echo "MariaDB is ready!"
+              echo "PostgreSQL is ready!"
       containers:
-        - name: web
+        - name: django
           image: your-registry/myapp:latest
           imagePullPolicy: Always
           command:

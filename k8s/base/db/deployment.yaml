@@ -17,22 +17,22 @@ spec:
     spec:
       containers:
         - name: db
-          image: mariadb:11
+          image: postgres:17
           envFrom:
             - secretRef:
                 name: myapp-env
           volumeMounts:
-            - name: mariadb-data
-              mountPath: /var/lib/mysql
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
           livenessProbe:
             exec:
-              command: ["healthcheck.sh", "--connect", "--innodb_initialized"]
+              command: ["pg_isready", "-U", "$(POSTGRES_USER)"]
             initialDelaySeconds: 20
             periodSeconds: 10
             failureThreshold: 5
   volumeClaimTemplates:
     - metadata:
-        name: mariadb-data
+        name: postgres-data
       spec:
         accessModes:
           - ReadWriteOnce

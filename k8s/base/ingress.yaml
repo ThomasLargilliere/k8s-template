@@ -17,7 +17,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: web
+                name: django
                 port:
                   number: 8000
     - host: localhost
@@ -27,6 +27,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: web
+                name: django
                 port:
                   number: 8000
