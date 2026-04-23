@@ -9,6 +9,7 @@ Template minimal pour un projet Django + Vue déployé sur Kubernetes.
 - [Docker](https://docs.docker.com/get-docker/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) connecté à un cluster local ([minikube](https://minikube.sigs.k8s.io/docs/start/), [k3d](https://k3d.io/), [kind](https://kind.sigs.k8s.io/)…)
 - [Skaffold](https://skaffold.dev/docs/install/)
+- [kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal) si tu veux générer des Sealed Secrets
 - Un ingress controller nginx installé dans le cluster ([guide d'installation](https://kubernetes.github.io/ingress-nginx/deploy/))
 
 ---
@@ -47,6 +48,8 @@ make init NAME=mon-projet
 
 Renseigner les identifiants de la base de données et la `SECRET_KEY`.
 
+Ce fichier est uniquement une source locale pour générer les Sealed Secrets. Il n'est pas déployé directement.
+
 Variables attendues :
 
 | Variable            | Description                     |
@@ -73,7 +76,28 @@ Les noms d'images par défaut sont `myapp-django` et `myapp-vue` (sans registry)
 
 ---
 
-## 3. Gitignorer ces fichiers dans ton projet
+## 3. Gérer les secrets
+
+Le template utilise uniquement les `sealed-secret.yaml` dans les overlays. Le fichier `k8s/base/secret.yaml` sert uniquement à :
+
+- garder les vraies valeurs localement
+- générer un `sealed-secret.yaml` par environnement avec `make seal`
+
+Exemples :
+
+```bash
+make seal
+make seal ENV=prod
+```
+
+Cela écrit :
+
+- `k8s/overlays/dev/sealed-secret.yaml`
+- `k8s/overlays/prod/sealed-secret.yaml`
+
+Ces fichiers sont ceux utilisés par Kustomize au déploiement.
+
+## 4. Gitignorer ces fichiers dans ton projet
 
 Ces fichiers contiennent des valeurs spécifiques à ton déploiement. Ajouter dans ton `.gitignore` :
 
@@ -85,10 +109,16 @@ skaffold.yaml
 
 ---
 
-## 4. Lancer en développement
+## 5. Lancer en développement
 
 ```bash
 make dev
+```
+
+Si `k8s/overlays/dev/sealed-secret.yaml` n'existe pas encore, commencer par :
+
+```bash
+make seal
 ```
 
 Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (via Kustomize), puis synchronise les fichiers sans rebuild pour la majorité des changements:
@@ -106,7 +136,7 @@ kubectl exec -it -n myapp deploy/django -- python manage.py migrate
 
 ---
 
-## 5. Accéder à l'application
+## 6. Accéder à l'application
 
 Ajouter l'entrée dans `/etc/hosts` (`make init` te l'indique automatiquement) :
 
@@ -128,6 +158,7 @@ make dev     # démarrage avec hot-reload (Skaffold, overlay dev)
 make up      # déploiement prod statique (kubectl apply -k overlays/prod)
 make down    # scale tous les deployments à 0
 make reset   # supprime le namespace entier
+make seal    # génère k8s/overlays/<env>/sealed-secret.yaml
 make migrate # lance les migrations Django dans le pod en cours
 make build   # build + push des images django/vue + mise à jour des tags
 make shell   # ouvre un shell dans le pod django en cours d'exécution
@@ -138,8 +169,9 @@ make shell   # ouvre un shell dans le pod django en cours d'exécution
 Éditer `BACKEND_IMAGE` et `FRONTEND_IMAGE` dans le `Makefile` avec l'URL de ton registry, puis :
 
 ```bash
+make seal ENV=prod
 make build   # build + push + mise à jour des tags dans k8s/base/django/ et k8s/base/vue/
-make up      # applique l'overlay prod
+make up ENV=prod  # applique l'overlay prod
 ```
 
 ## Commandes npm utiles
