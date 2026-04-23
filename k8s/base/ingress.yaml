@@ -20,6 +20,20 @@ spec:
                 name: django
                 port:
                   number: 8000
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
+          - path: /media
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
           - path: /api
             pathType: Prefix
             backend:
@@ -38,6 +52,20 @@ spec:
       http:
         paths:
           - path: /admin
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
+          - path: /static
+            pathType: Prefix
+            backend:
+              service:
+                name: django
+                port:
+                  number: 8000
+          - path: /media
             pathType: Prefix
             backend:
               service:
