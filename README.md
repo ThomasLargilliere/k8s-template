@@ -1,8 +1,8 @@
-# Django k8s Template
+# Django + Vue k8s Template
 
-Template minimal pour un projet Django déployé sur Kubernetes.
+Template minimal pour un projet Django + Vue déployé sur Kubernetes.
 
-**Stack :** Python 3.14 · Django 6 · PostgreSQL 17 · Gunicorn · Whitenoise
+**Stack :** Python 3.14 · Django 6 · Vue 3 · Vite · PostgreSQL 17 · Gunicorn · Whitenoise · nginx
 
 ## Prérequis
 
@@ -16,9 +16,10 @@ Template minimal pour un projet Django déployé sur Kubernetes.
 ## Structure
 
 ```
-django/               # code source Django (Dockerfile, manage.py, config/)
+django/               # backend Django (Dockerfile, manage.py, config/)
+vue/                  # frontend Vue (Vite + nginx)
 k8s/
-  base/               # manifests communs (namespace, db, django, ingress, secret)
+  base/               # manifests communs (namespace, postgres, django, vue, ingress, secret)
   overlays/
     dev/              # replicas=1, imagePullPolicy=IfNotPresent
     prod/             # replicas=2, imagePullPolicy=Always
@@ -56,7 +57,7 @@ Variables attendues :
 | `DB_NAME`           | Nom de la base PostgreSQL       |
 | `DB_USER`           | Utilisateur PostgreSQL          |
 | `DB_PASSWORD`       | Mot de passe PostgreSQL         |
-| `DB_HOST`           | Hostname du service db          |
+| `DB_HOST`           | Hostname du service postgres    |
 | `DB_PORT`           | Port PostgreSQL (défaut : 5432) |
 | `POSTGRES_DB`       | Utilisé par l'image postgres    |
 | `POSTGRES_USER`     | Utilisé par l'image postgres    |
@@ -68,7 +69,7 @@ L'URL par défaut est `myapp.local`. Pour la changer, modifier le champ `host` d
 
 ### `skaffold.yaml`
 
-Le nom d'image par défaut est `myapp` (sans registry). Avec `push: false`, Skaffold construit l'image localement et l'injecte directement dans le cluster — **aucun registry nécessaire** pour le développement.
+Les noms d'images par défaut sont `myapp-django` et `myapp-vue` (sans registry). Avec `push: false`, Skaffold construit les images localement et les injecte directement dans le cluster — **aucun registry nécessaire** pour le développement.
 
 ---
 
@@ -102,7 +103,10 @@ Ajouter l'entrée dans `/etc/hosts` (`make init` te l'indique automatiquement) :
 echo "127.0.0.1 myapp.local" | sudo tee -a /etc/hosts
 ```
 
-Puis ouvrir : **http://myapp.local/admin/**
+Puis ouvrir :
+
+- **http://myapp.local/** pour le frontend Vue
+- **http://myapp.local/admin/** pour Django admin
 
 ---
 
@@ -113,15 +117,27 @@ make dev     # démarrage avec hot-reload (Skaffold, overlay dev)
 make up      # déploiement prod statique (kubectl apply -k overlays/prod)
 make down    # scale tous les deployments à 0
 make reset   # supprime le namespace entier
-make build   # build + push + mise à jour du tag dans les manifests
+make build   # build + push des images django/vue + mise à jour des tags
 make shell   # ouvre un shell dans le pod django en cours d'exécution
 ```
 
 ## En production
 
-Éditer `IMAGE` dans le `Makefile` avec l'URL de ton registry, puis :
+Éditer `BACKEND_IMAGE` et `FRONTEND_IMAGE` dans le `Makefile` avec l'URL de ton registry, puis :
 
 ```bash
-make build   # build + push + mise à jour du tag dans k8s/base/django/
+make build   # build + push + mise à jour des tags dans k8s/base/django/ et k8s/base/vue/
 make up      # applique l'overlay prod
+```
+
+## Commandes npm utiles
+
+Si tu veux recréer le frontend à la main plutôt que garder le scaffold déjà ajouté :
+
+```bash
+npm create vite@latest vue -- --template vue
+cd vue
+npm install
+npm run dev
+npm run build
 ```

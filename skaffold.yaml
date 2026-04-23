@@ -4,8 +4,12 @@ metadata:
   name: myapp
 build:
   artifacts:
-    - image: your-registry/myapp
+    - image: your-registry/myapp-django
       context: ./django
+      docker:
+        dockerfile: Dockerfile
+    - image: your-registry/myapp-vue
+      context: ./vue
       docker:
         dockerfile: Dockerfile
   local:

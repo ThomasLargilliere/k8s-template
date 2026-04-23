@@ -1,5 +1,2 @@
 .idea/
-k8s/secret.yaml
-k8s/ingress.yaml
-k8s/web/deployment.dev.yaml
-skaffold.yaml
+.codex

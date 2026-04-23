@@ -1,4 +1,5 @@
-IMAGE ?= your-registry/myapp
+BACKEND_IMAGE ?= your-registry/myapp-django
+FRONTEND_IMAGE ?= your-registry/myapp-vue
 NAMESPACE ?= myapp
 
 init:
@@ -27,10 +28,13 @@ up:
 	kubectl apply -k k8s/overlays/prod
 
 build:
-	docker build -t $(IMAGE):$(shell git rev-parse --short HEAD) ./django
-	docker push $(IMAGE):$(shell git rev-parse --short HEAD)
-	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/deployment.yaml
-	sed -i 's|$(IMAGE):.*|$(IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/migrate-job.yaml
+	docker build -t $(BACKEND_IMAGE):$(shell git rev-parse --short HEAD) ./django
+	docker build -t $(FRONTEND_IMAGE):$(shell git rev-parse --short HEAD) ./vue
+	docker push $(BACKEND_IMAGE):$(shell git rev-parse --short HEAD)
+	docker push $(FRONTEND_IMAGE):$(shell git rev-parse --short HEAD)
+	sed -i 's|$(BACKEND_IMAGE):.*|$(BACKEND_IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/deployment.yaml
+	sed -i 's|$(BACKEND_IMAGE):.*|$(BACKEND_IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/django/migrate-job.yaml
+	sed -i 's|$(FRONTEND_IMAGE):.*|$(FRONTEND_IMAGE):$(shell git rev-parse --short HEAD)|g' k8s/base/vue/deployment.yaml
 
 shell:
 	kubectl exec -it -n $(NAMESPACE) \

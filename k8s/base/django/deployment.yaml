@@ -15,13 +15,13 @@ spec:
         app: django
     spec:
       initContainers:
-        - name: wait-for-db
+        - name: wait-for-postgres
           image: busybox
           command:
             - sh
             - -c
             - |
-              until nc -z db 5432; do
+              until nc -z postgres 5432; do
                 echo "Waiting for PostgreSQL..."
                 sleep 2
               done

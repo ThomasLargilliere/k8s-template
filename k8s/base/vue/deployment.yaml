@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vue
+  namespace: myapp
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: vue
+  template:
+    metadata:
+      labels:
+        app: vue
+    spec:
+      containers:
+        - name: vue
+          image: your-registry/myapp-vue:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80

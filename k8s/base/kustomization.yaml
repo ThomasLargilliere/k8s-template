@@ -4,8 +4,10 @@ resources:
   - namespace.yaml
   - secret.yaml
   - ingress.yaml
-  - db/deployment.yaml
-  - db/service.yaml
+  - postgres/deployment.yaml
+  - postgres/service.yaml
   - django/deployment.yaml
   - django/migrate-job.yaml
   - django/service.yaml
+  - vue/deployment.yaml
+  - vue/service.yaml
