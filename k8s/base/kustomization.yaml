@@ -9,5 +9,6 @@ resources:
   - postgres/service.yaml
   - django/deployment.yaml
   - django/service.yaml
+  - django/media-pvc.yaml
   - vue/deployment.yaml
   - vue/service.yaml

@@ -14,6 +14,8 @@ spec:
       labels:
         app: django
     spec:
+      securityContext:
+        fsGroup: 1001
       initContainers:
         - name: wait-for-postgres
           image: postgres:17
@@ -44,8 +46,41 @@ spec:
                 name: myapp-env
           ports:
             - containerPort: 8000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: localhost
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+              httpHeaders:
+                - name: Host
+                  value: localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: media
+              mountPath: /app/media
       volumes:
         - name: bootstrap-scripts
           configMap:
             name: myapp-bootstrap-scripts
             defaultMode: 0755
+        - name: media
+          persistentVolumeClaim:
+            claimName: django-media

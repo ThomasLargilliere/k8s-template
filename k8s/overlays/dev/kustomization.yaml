@@ -7,3 +7,4 @@ patches:
   - path: django-patch.yaml
   - path: vue-patch.yaml
   - path: vue-service-patch.yaml
+  - path: configmap-patch.yaml

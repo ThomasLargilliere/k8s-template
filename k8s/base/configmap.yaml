@@ -4,7 +4,7 @@ metadata:
   name: myapp-config
   namespace: myapp
 data:
-  DEBUG: "True"
+  DEBUG: "False"
   ALLOWED_HOSTS: "localhost,127.0.0.1,myapp.local"
   CSRF_TRUSTED_ORIGINS: "https://myapp.example.com"
   DB_NAME: "myapp"

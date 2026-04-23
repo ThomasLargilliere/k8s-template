@@ -18,3 +18,18 @@ spec:
                   key: ALLOWED_HOSTS
           ports:
             - containerPort: 5173
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5173
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5173
