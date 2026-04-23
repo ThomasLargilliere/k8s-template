@@ -8,10 +8,29 @@ build:
       context: ./django
       docker:
         dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "**/*.py"
+            dest: /app
+          - src: "templates/**/*.html"
+            dest: /app
+          - src: "static/**/*"
+            dest: /app
     - image: your-registry/myapp-vue
       context: ./vue
       docker:
         dockerfile: Dockerfile
+        target: dev
+      sync:
+        manual:
+          - src: "src/**/*"
+            dest: /app
+          - src: "public/**/*"
+            dest: /app
+          - src: "index.html"
+            dest: /app
+          - src: "vite.config.js"
+            dest: /app
   local:
     push: false
 manifests:

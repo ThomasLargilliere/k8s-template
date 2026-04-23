@@ -91,7 +91,12 @@ skaffold.yaml
 make dev
 ```
 
-Skaffold construit l'image, applique l'overlay `dev` (via Kustomize) et surveille les changements.
+Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (via Kustomize), puis synchronise les fichiers sans rebuild pour la majorité des changements:
+
+- Django: sync des `.py`, templates et fichiers `static/`
+- Vue: sync de `src/`, `public/`, `index.html` et `vite.config.js`
+
+En dev, Django tourne avec `runserver` et Vue avec le serveur Vite dans le pod pour garder une boucle de feedback rapide.
 
 ---
 

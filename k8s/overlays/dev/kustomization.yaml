@@ -5,3 +5,4 @@ resources:
 patches:
   - path: django-patch.yaml
   - path: vue-patch.yaml
+  - path: vue-service-patch.yaml

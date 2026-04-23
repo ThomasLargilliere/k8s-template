@@ -10,3 +10,5 @@ spec:
       containers:
         - name: vue
           imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5173
