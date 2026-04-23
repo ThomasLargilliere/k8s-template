@@ -10,5 +10,11 @@ spec:
       containers:
         - name: vue
           imagePullPolicy: IfNotPresent
+          env:
+            - name: ALLOWED_HOSTS
+              valueFrom:
+                secretKeyRef:
+                  name: myapp-env
+                  key: ALLOWED_HOSTS
           ports:
             - containerPort: 5173
