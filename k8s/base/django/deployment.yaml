@@ -16,16 +16,19 @@ spec:
     spec:
       initContainers:
         - name: wait-for-postgres
-          image: busybox
+          image: postgres:17
+          envFrom:
+            - configMapRef:
+                name: myapp-config
+            - secretRef:
+                name: myapp-env
+          volumeMounts:
+            - name: bootstrap-scripts
+              mountPath: /opt/bootstrap
+              readOnly: true
           command:
             - sh
-            - -c
-            - |
-              until nc -z postgres 5432; do
-                echo "Waiting for PostgreSQL..."
-                sleep 2
-              done
-              echo "PostgreSQL is ready!"
+            - /opt/bootstrap/wait-for-postgres.sh
       containers:
         - name: django
           image: your-registry/myapp-django:latest
@@ -41,3 +44,8 @@ spec:
                 name: myapp-env
           ports:
             - containerPort: 8000
+      volumes:
+        - name: bootstrap-scripts
+          configMap:
+            name: myapp-bootstrap-scripts
+            defaultMode: 0755
