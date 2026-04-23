@@ -28,7 +28,7 @@ spec:
               echo "PostgreSQL is ready!"
       containers:
         - name: django
-          image: your-registry/myapp:latest
+          image: your-registry/myapp-django:latest
           imagePullPolicy: Always
           command:
             - sh

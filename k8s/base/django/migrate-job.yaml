@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: migrate
-          image: your-registry/myapp:latest
+          image: your-registry/myapp-django:latest
           imagePullPolicy: Always
           command: ["python", "manage.py", "migrate"]
           envFrom:
