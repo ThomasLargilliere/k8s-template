@@ -98,6 +98,12 @@ Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (v
 
 En dev, Django tourne avec `runserver` et Vue avec le serveur Vite dans le pod pour garder une boucle de feedback rapide.
 
+Les migrations ne sont pas lancées automatiquement en dev. Les exécuter au besoin avec :
+
+```bash
+kubectl exec -it -n myapp deploy/django -- python manage.py migrate
+```
+
 ---
 
 ## 5. Accéder à l'application
@@ -122,6 +128,7 @@ make dev     # démarrage avec hot-reload (Skaffold, overlay dev)
 make up      # déploiement prod statique (kubectl apply -k overlays/prod)
 make down    # scale tous les deployments à 0
 make reset   # supprime le namespace entier
+make migrate # lance les migrations Django dans le pod en cours
 make build   # build + push des images django/vue + mise à jour des tags
 make shell   # ouvre un shell dans le pod django en cours d'exécution
 ```

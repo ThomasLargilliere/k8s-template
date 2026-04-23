@@ -27,6 +27,9 @@ reset:
 up:
 	kubectl apply -k k8s/overlays/prod
 
+migrate:
+	kubectl exec -it -n $(NAMESPACE) deploy/django -- python manage.py migrate
+
 build:
 	docker build -t $(BACKEND_IMAGE):$(shell git rev-parse --short HEAD) ./django
 	docker build -t $(FRONTEND_IMAGE):$(shell git rev-parse --short HEAD) ./vue
