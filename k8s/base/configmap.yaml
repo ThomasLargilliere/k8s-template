@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-config
+  namespace: myapp
+data:
+  DEBUG: "True"
+  ALLOWED_HOSTS: "localhost,127.0.0.1,myapp.local"
+  CSRF_TRUSTED_ORIGINS: "https://myapp.example.com"
+  DB_NAME: "myapp"
+  DB_USER: "myapp_user"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  POSTGRES_DB: "myapp"
+  POSTGRES_USER: "myapp_user"

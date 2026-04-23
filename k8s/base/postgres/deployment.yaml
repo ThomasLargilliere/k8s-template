@@ -19,6 +19,8 @@ spec:
         - name: postgres
           image: postgres:17
           envFrom:
+            - configMapRef:
+                name: myapp-config
             - secretRef:
                 name: myapp-env
           volumeMounts:

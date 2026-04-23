@@ -44,27 +44,37 @@ make init NAME=mon-projet
 
 ## 2. Personnaliser les fichiers de configuration
 
+### `k8s/base/configmap.yaml`
+
+Renseigner ici la configuration non sensible.
+
+Variables attendues :
+
+| Variable               | Description                       |
+|------------------------|-----------------------------------|
+| `DEBUG`                | `True` ou `False`                 |
+| `ALLOWED_HOSTS`        | Hosts autorisés (séparés par `,`) |
+| `CSRF_TRUSTED_ORIGINS` | Origines CSRF de confiance        |
+| `DB_NAME`              | Nom de la base PostgreSQL         |
+| `DB_USER`              | Utilisateur PostgreSQL            |
+| `DB_HOST`              | Hostname du service postgres      |
+| `DB_PORT`              | Port PostgreSQL (défaut : 5432)   |
+| `POSTGRES_DB`          | Utilisé par l'image postgres      |
+| `POSTGRES_USER`        | Utilisé par l'image postgres      |
+
 ### `k8s/base/secret.yaml`
 
-Renseigner les identifiants de la base de données et la `SECRET_KEY`.
+Renseigner ici uniquement les valeurs sensibles.
 
 Ce fichier est uniquement une source locale pour générer les Sealed Secrets. Il n'est pas déployé directement.
 
 Variables attendues :
 
-| Variable            | Description                     |
-|---------------------|---------------------------------|
-| `SECRET_KEY`        | Clé secrète Django              |
-| `DEBUG`             | `True` ou `False`               |
-| `ALLOWED_HOSTS`     | Hosts autorisés (séparés par `,`)|
-| `DB_NAME`           | Nom de la base PostgreSQL       |
-| `DB_USER`           | Utilisateur PostgreSQL          |
-| `DB_PASSWORD`       | Mot de passe PostgreSQL         |
-| `DB_HOST`           | Hostname du service postgres    |
-| `DB_PORT`           | Port PostgreSQL (défaut : 5432) |
-| `POSTGRES_DB`       | Utilisé par l'image postgres    |
-| `POSTGRES_USER`     | Utilisé par l'image postgres    |
-| `POSTGRES_PASSWORD` | Utilisé par l'image postgres    |
+| Variable            | Description                  |
+|---------------------|------------------------------|
+| `SECRET_KEY`        | Clé secrète Django           |
+| `DB_PASSWORD`       | Mot de passe PostgreSQL      |
+| `POSTGRES_PASSWORD` | Mot de passe pour Postgres   |
 
 ### `k8s/base/ingress.yaml`
 
@@ -78,7 +88,12 @@ Les noms d'images par défaut sont `myapp-django` et `myapp-vue` (sans registry)
 
 ## 3. Gérer les secrets
 
-Le template utilise uniquement les `sealed-secret.yaml` dans les overlays. Le fichier `k8s/base/secret.yaml` sert uniquement à :
+Le template utilise :
+
+- `k8s/base/configmap.yaml` pour la configuration non sensible
+- `sealed-secret.yaml` dans les overlays pour les valeurs sensibles
+
+Le fichier `k8s/base/secret.yaml` sert uniquement à :
 
 - garder les vraies valeurs localement
 - générer un `sealed-secret.yaml` par environnement avec `make seal`
@@ -128,10 +143,10 @@ Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (v
 
 En dev, Django tourne avec `runserver` et Vue avec le serveur Vite dans le pod pour garder une boucle de feedback rapide.
 
-Les migrations ne sont pas lancées automatiquement en dev. Les exécuter au besoin avec :
+Le job de migration n'est pas déployé en dev. Les migrations se lancent au besoin avec :
 
 ```bash
-kubectl exec -it -n myapp deploy/django -- python manage.py migrate
+make migrate
 ```
 
 ---
@@ -173,6 +188,8 @@ make seal ENV=prod
 make build   # build + push + mise à jour des tags dans k8s/base/django/ et k8s/base/vue/
 make up ENV=prod  # applique l'overlay prod
 ```
+
+En prod, le `Job` `migrate` est inclus dans l'overlay et s'exécute avant le déploiement de l'application.
 
 ## Commandes npm utiles
 
