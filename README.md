@@ -9,7 +9,7 @@ Template minimal pour un projet Django + Vue déployé sur Kubernetes.
 - [Docker](https://docs.docker.com/get-docker/)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/) connecté à un cluster local ([minikube](https://minikube.sigs.k8s.io/docs/start/), [k3d](https://k3d.io/), [kind](https://kind.sigs.k8s.io/)…)
 - [Skaffold](https://skaffold.dev/docs/install/)
-- [kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal) si tu veux générer des Sealed Secrets
+- [kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal) uniquement pour la prod
 - Un ingress controller nginx installé dans le cluster ([guide d'installation](https://kubernetes.github.io/ingress-nginx/deploy/))
 
 ---
@@ -20,10 +20,10 @@ Template minimal pour un projet Django + Vue déployé sur Kubernetes.
 django/               # backend Django (Dockerfile, manage.py, config/)
 vue/                  # frontend Vue (Vite + nginx)
 k8s/
-  base/               # manifests communs (namespace, postgres, django, vue, ingress, secret)
+  base/               # manifests communs (namespace, postgres, django, vue, ingress)
   overlays/
-    dev/              # replicas=1, imagePullPolicy=IfNotPresent
-    prod/             # replicas=2, imagePullPolicy=Always
+    dev/              # replicas=1, imagePullPolicy=IfNotPresent, secret en clair
+    prod/             # replicas=2, imagePullPolicy=Always, sealed-secret
 ```
 
 Les overlays utilisent [Kustomize](https://kustomize.io/) (intégré à kubectl).
@@ -62,19 +62,9 @@ Variables attendues :
 | `POSTGRES_DB`          | Utilisé par l'image postgres      |
 | `POSTGRES_USER`        | Utilisé par l'image postgres      |
 
-### `k8s/base/secret.yaml`
+### `k8s/overlays/dev/secret.yaml`
 
-Renseigner ici uniquement les valeurs sensibles.
-
-Ce fichier est uniquement une source locale pour générer les Sealed Secrets. Il n'est pas déployé directement.
-
-Variables attendues :
-
-| Variable            | Description                  |
-|---------------------|------------------------------|
-| `SECRET_KEY`        | Clé secrète Django           |
-| `DB_PASSWORD`       | Mot de passe PostgreSQL      |
-| `POSTGRES_PASSWORD` | Mot de passe pour Postgres   |
+Renseigner ici les valeurs sensibles pour le développement. Ce fichier est commité dans git car il ne contient que des valeurs de dev sans risque.
 
 ### `k8s/base/ingress.yaml`
 
@@ -88,58 +78,43 @@ Les noms d'images par défaut sont `myapp-django` et `myapp-vue` (sans registry)
 
 ## 3. Gérer les secrets
 
-Le template utilise :
+Le template utilise deux stratégies selon l'environnement :
 
-- `k8s/base/configmap.yaml` pour la configuration non sensible
-- `sealed-secret.yaml` dans les overlays pour les valeurs sensibles
+| Environnement | Fichier | Commité ? |
+|---------------|---------|-----------|
+| dev | `k8s/overlays/dev/secret.yaml` (Secret Kubernetes en clair) | Oui (valeurs de dev uniquement) |
+| prod | `k8s/overlays/prod/sealed-secret.yaml` (SealedSecret chiffré) | Oui (chiffré) |
 
-Le fichier `k8s/base/secret.yaml` sert uniquement à :
+### Générer le sealed-secret pour la prod
 
-- garder les vraies valeurs localement
-- générer un `sealed-secret.yaml` par environnement avec `make seal`
-
-Exemples :
+Créer `k8s/overlays/prod/secret.yaml` localement (ce fichier est ignoré par git) avec les vraies valeurs de prod, puis :
 
 ```bash
 make seal
-make seal ENV=prod
 ```
 
-Cela écrit :
+Cela lit `k8s/overlays/prod/secret.yaml` et écrit `k8s/overlays/prod/sealed-secret.yaml`. Supprimer ensuite le fichier en clair.
 
-- `k8s/overlays/dev/sealed-secret.yaml`
-- `k8s/overlays/prod/sealed-secret.yaml`
+Variables sensibles attendues :
 
-Ces fichiers sont ceux utilisés par Kustomize au déploiement.
-
-## 4. Gitignorer ces fichiers dans ton projet
-
-Ces fichiers contiennent des valeurs spécifiques à ton déploiement. Ajouter dans ton `.gitignore` :
-
-```
-k8s/base/secret.yaml
-k8s/base/ingress.yaml
-skaffold.yaml
-```
+| Variable            | Description                |
+|---------------------|----------------------------|
+| `SECRET_KEY`        | Clé secrète Django         |
+| `DB_PASSWORD`       | Mot de passe PostgreSQL    |
+| `POSTGRES_PASSWORD` | Mot de passe pour Postgres |
 
 ---
 
-## 5. Lancer en développement
+## 4. Lancer en développement
 
 ```bash
 make dev
 ```
 
-Si `k8s/overlays/dev/sealed-secret.yaml` n'existe pas encore, commencer par :
+Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (via Kustomize), puis synchronise les fichiers sans rebuild pour la majorité des changements :
 
-```bash
-make seal
-```
-
-Au premier lancement, Skaffold construit les images, applique l'overlay `dev` (via Kustomize), puis synchronise les fichiers sans rebuild pour la majorité des changements:
-
-- Django: sync des `.py`, templates et fichiers `static/`
-- Vue: sync de `src/`, `public/`, `index.html` et `vite.config.js`
+- Django : sync des `.py`, templates et fichiers `static/`
+- Vue : sync de `src/`, `public/`, `index.html` et `vite.config.js`
 
 En dev, Django tourne avec `runserver` et Vue avec le serveur Vite dans le pod pour garder une boucle de feedback rapide.
 
@@ -151,7 +126,7 @@ make migrate
 
 ---
 
-## 6. Accéder à l'application
+## 5. Accéder à l'application
 
 Ajouter l'entrée dans `/etc/hosts` (`make init` te l'indique automatiquement) :
 
@@ -173,7 +148,7 @@ make dev     # démarrage avec hot-reload (Skaffold, overlay dev)
 make up      # déploiement prod statique (kubectl apply -k overlays/prod)
 make down    # scale tous les deployments à 0
 make reset   # supprime le namespace entier
-make seal    # génère k8s/overlays/<env>/sealed-secret.yaml
+make seal    # génère k8s/overlays/prod/sealed-secret.yaml depuis overlays/prod/secret.yaml
 make migrate # lance les migrations Django dans le pod en cours
 make build   # build + push des images django/vue + mise à jour des tags
 make shell   # ouvre un shell dans le pod django en cours d'exécution
@@ -184,9 +159,10 @@ make shell   # ouvre un shell dans le pod django en cours d'exécution
 Éditer `BACKEND_IMAGE` et `FRONTEND_IMAGE` dans le `Makefile` avec l'URL de ton registry, puis :
 
 ```bash
-make seal ENV=prod
+# Créer k8s/overlays/prod/secret.yaml avec les vraies valeurs (ne pas commiter)
+make seal    # chiffre le secret pour le cluster prod
 make build   # build + push + mise à jour des tags dans k8s/base/django/ et k8s/base/vue/
-make up ENV=prod  # applique l'overlay prod
+make up      # applique l'overlay prod
 ```
 
 En prod, le `Job` `migrate` est inclus dans l'overlay et s'exécute avant le déploiement de l'application.
