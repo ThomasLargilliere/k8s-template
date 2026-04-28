@@ -1,3 +1,4 @@
 .idea/
 .codex
 vue/dist/
+k8s/overlays/prod/secret.yaml
